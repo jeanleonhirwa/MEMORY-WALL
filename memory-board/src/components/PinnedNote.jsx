@@ -2,6 +2,7 @@ import { useRef, useState, useCallback } from 'react';
 import { useThree } from '@react-three/fiber';
 import { Text, RoundedBox } from '@react-three/drei';
 import { useSpring, animated } from '@react-spring/three';
+import { Vector3 } from 'three';
 import Pin from './Pin';
 import useBoardStore from '../store/useBoardStore';
 
@@ -36,10 +37,7 @@ export default function PinnedNote({ item }) {
       const rect = gl.domElement.getBoundingClientRect();
       const x = ((clientX - rect.left) / rect.width) * 2 - 1;
       const y = -((clientY - rect.top) / rect.height) * 2 + 1;
-
-      // Unproject onto the z=0 plane
-      const vector = { x, y, z: 0.5 };
-      const vec3 = new (require('three').Vector3)(x, y, 0.5);
+      const vec3 = new Vector3(x, y, 0.5);
       vec3.unproject(camera);
       const dir = vec3.sub(camera.position).normalize();
       const distance = -camera.position.z / dir.z;

@@ -2,6 +2,7 @@ import { useRef, useState, useCallback, Suspense } from 'react';
 import { useThree } from '@react-three/fiber';
 import { Text, RoundedBox, useTexture } from '@react-three/drei';
 import { useSpring, animated } from '@react-spring/three';
+import { Vector3 } from 'three';
 import Pin from './Pin';
 import useBoardStore from '../store/useBoardStore';
 
@@ -58,7 +59,6 @@ export default function PinnedPhoto({ item }) {
       const rect = gl.domElement.getBoundingClientRect();
       const x = ((clientX - rect.left) / rect.width) * 2 - 1;
       const y = -((clientY - rect.top) / rect.height) * 2 + 1;
-      const { Vector3 } = require('three');
       const vec3 = new Vector3(x, y, 0.5);
       vec3.unproject(camera);
       const dir = vec3.sub(camera.position).normalize();
