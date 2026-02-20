@@ -22,9 +22,13 @@ export default function Toolbar() {
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
     const caption = file.name.replace(/\.[^/.]+$/, '');
-    addPhoto(url, caption);
+    // Convert to base64 data URL so Three.js can load it and it persists in localStorage
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      addPhoto(event.target.result, caption);
+    };
+    reader.readAsDataURL(file);
     e.target.value = '';
   };
 

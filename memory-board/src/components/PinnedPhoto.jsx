@@ -1,28 +1,42 @@
-import { useRef, useState, useCallback, Suspense } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
-import { Text, RoundedBox, useTexture } from '@react-three/drei';
+import { Text, RoundedBox } from '@react-three/drei';
 import { useSpring, animated } from '@react-spring/three';
-import { Vector3 } from 'three';
+import { Vector3, TextureLoader } from 'three';
 import Pin from './Pin';
 import useBoardStore from '../store/useBoardStore';
 
 /**
- * Photo placeholder shown while image loads or on error
- */
-function PhotoPlaceholder({ width, height }) {
-  return (
-    <mesh position={[0, 0.08, 0.005]}>
-      <planeGeometry args={[width - 0.2, height - 0.45]} />
-      <meshStandardMaterial color="#cccccc" roughness={0.9} />
-    </mesh>
-  );
-}
-
-/**
- * The actual photo texture mesh
+ * The actual photo texture mesh — loads texture imperatively to support data URLs
  */
 function PhotoImage({ url, width, height }) {
-  const texture = useTexture(url);
+  const [texture, setTexture] = useState(null);
+
+  useEffect(() => {
+    if (!url) return;
+    const loader = new TextureLoader();
+    loader.load(
+      url,
+      (tex) => {
+        setTexture(tex);
+      },
+      undefined,
+      (err) => {
+        console.error('Failed to load photo texture:', err);
+      }
+    );
+  }, [url]);
+
+  if (!texture) {
+    // Placeholder while loading
+    return (
+      <mesh position={[0, 0.08, 0.005]}>
+        <planeGeometry args={[width - 0.2, height - 0.45]} />
+        <meshStandardMaterial color="#d0d0d0" roughness={0.9} />
+      </mesh>
+    );
+  }
+
   return (
     <mesh position={[0, 0.08, 0.006]}>
       <planeGeometry args={[width - 0.2, height - 0.45]} />
@@ -124,9 +138,7 @@ export default function PinnedPhoto({ item }) {
       </RoundedBox>
 
       {/* Photo image */}
-      <Suspense fallback={<PhotoPlaceholder width={width} height={height} />}>
-        <PhotoImage url={imageUrl} width={width} height={height} />
-      </Suspense>
+      <PhotoImage url={imageUrl} width={width} height={height} />
 
       {/* Caption text at bottom */}
       {caption ? (
