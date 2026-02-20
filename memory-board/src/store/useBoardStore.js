@@ -5,7 +5,17 @@ import { v4 as uuidv4 } from 'uuid';
 export const NOTE_COLORS = ['#f9e94e', '#f9c74f', '#90e0ef', '#f4a261', '#a8dadc', '#f48fb1', '#b5ead7', '#ff9aa2'];
 export const PIN_COLORS  = ['#e63946', '#023e8a', '#2dc653', '#ff9f1c', '#9b5de5', '#ffffff', '#00b4d8', '#f72585'];
 
-const BOARD_COLORS = { cork: '#8B6914', dark: '#1e1e2e', blueprint: '#0d2137', whiteboard: '#f5f5f0' };
+const BOARD_COLORS = {
+  cork:       '#a07840',
+  dark:       '#16161e',
+  blueprint:  '#0a1f35',
+  whiteboard: '#f8f7f4',
+  midnight:   '#0b0d1a',
+  forest:     '#1a2a1a',
+  slate:      '#2a3040',
+  paper:      '#f5f0e8',
+  neon:       '#0a0014',
+};
 
 function randomPos() {
   return [(Math.random() - 0.5) * 10, (Math.random() - 0.5) * 5, 0.05];

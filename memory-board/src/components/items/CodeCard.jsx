@@ -1,6 +1,7 @@
 import { Text, RoundedBox } from '@react-three/drei';
 import { useSpring, animated } from '@react-spring/three';
 import useItemDrag from '../../hooks/useItemDrag';
+import useBoardStore from '../../store/useBoardStore';
 import Pin from '../Pin';
 
 const LANG_COLORS = {
@@ -11,8 +12,14 @@ const LANG_COLORS = {
 };
 
 export default function CodeCard({ item }) {
-  const { id, code = '', language = 'javascript', title = 'Snippet', position, rotation, pinColor, width = 2.8, height = 2.2, tags = [] } = item;
+  const { code = '', language = 'javascript', title = 'Snippet', position, rotation, pinColor, width = 2.8, height = 2.2, tags = [] } = item;
   const { hovered, isSelected, onPointerDown, onPointerEnter, onPointerLeave } = useItemDrag(item);
+
+  const boards        = useBoardStore((s) => s.boards);
+  const activeBoardId = useBoardStore((s) => s.activeBoardId);
+  const themeKey      = boards.find((b) => b.id === activeBoardId)?.theme || 'cork';
+  const isNeonTheme   = themeKey === 'neon';
+  const isLightTheme  = themeKey === 'whiteboard' || themeKey === 'paper';
 
   const { pos, rot, scale } = useSpring({
     pos: position, rot: rotation,
@@ -20,9 +27,10 @@ export default function CodeCard({ item }) {
     config: { tension: 200, friction: 22 },
   });
 
-  const langColor = LANG_COLORS[language] || LANG_COLORS.default;
-  // Truncate code for display (3D Text has limits)
+  const langColor  = LANG_COLORS[language] || LANG_COLORS.default;
   const displayCode = code.split('\n').slice(0, 10).join('\n');
+  // On light themes, use a slightly lighter card body so it reads well
+  const cardColor  = isLightTheme ? '#252538' : '#1e1e2e';
 
   return (
     <animated.group
@@ -31,9 +39,22 @@ export default function CodeCard({ item }) {
       onPointerEnter={onPointerEnter}
       onPointerLeave={onPointerLeave}
     >
+      {/* Drop shadow */}
+      <mesh position={[0.07, -0.08, -0.008]}>
+        <planeGeometry args={[width + 0.1, height + 0.1]} />
+        <meshStandardMaterial color="#000000" transparent opacity={isLightTheme ? 0.22 : 0.38} roughness={1} />
+      </mesh>
+
+      {/* Neon glow outline */}
+      {isNeonTheme && (
+        <RoundedBox args={[width + 0.05, height + 0.05, 0.04]} radius={0.05} smoothness={4} position={[0, 0, -0.003]}>
+          <meshStandardMaterial color="#00ffff" transparent opacity={0.4} roughness={0.3} />
+        </RoundedBox>
+      )}
+
       {/* Dark card body */}
       <RoundedBox args={[width, height, 0.05]} radius={0.04} smoothness={4} castShadow receiveShadow>
-        <meshStandardMaterial color="#1e1e2e" roughness={0.7} metalness={0.1} />
+        <meshStandardMaterial color={cardColor} roughness={0.7} metalness={isNeonTheme ? 0.3 : 0.1} />
       </RoundedBox>
 
       {/* Header bar */}

@@ -1,15 +1,15 @@
 import { Suspense, useRef, useEffect } from 'react';
-import { Canvas, useThree, useFrame } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import { Environment, ContactShadows } from '@react-three/drei';
+import { Vector2 } from 'three';
 import CorkBoard from './CorkBoard';
 import ConnectorLines from './ConnectorLines';
 import useBoardStore from '../store/useBoardStore';
-import { Vector2, Vector3 } from 'three';
+import { THEMES } from './CorkBoard';
 
-/**
- * Pan-only camera controller — no rotation, just pan + zoom via wheel.
- * Middle-mouse or right-click drag pans. Scroll wheel zooms.
- */
+// ─────────────────────────────────────────────────────────────────────────────
+// Pan + Zoom camera — no rotation, just pan & scroll-zoom
+// ─────────────────────────────────────────────────────────────────────────────
 function PanZoomCamera() {
   const { camera, gl } = useThree();
   const isPanning = useRef(false);
@@ -25,7 +25,6 @@ function PanZoomCamera() {
     };
 
     const onMouseDown = (e) => {
-      // Middle mouse (button 1) or right click (button 2) or space+left = pan
       if (e.button === 1 || e.button === 2 || e.altKey) {
         isPanning.current = true;
         lastMouse.current.set(e.clientX, e.clientY);
@@ -39,8 +38,6 @@ function PanZoomCamera() {
       const dx = e.clientX - lastMouse.current.x;
       const dy = e.clientY - lastMouse.current.y;
       lastMouse.current.set(e.clientX, e.clientY);
-
-      // Scale pan by zoom level
       const panSpeed = camera.position.z * 0.0012;
       camera.position.x -= dx * panSpeed;
       camera.position.y += dy * panSpeed;
@@ -71,59 +68,145 @@ function PanZoomCamera() {
   return null;
 }
 
-/**
- * Resolves board theme color from board settings.
- */
-const THEME_BG = {
-  cork:       '#1a1a2e',
-  dark:       '#0a0a12',
-  blueprint:  '#061525',
-  whiteboard: '#e8e8e8',
+// ─────────────────────────────────────────────────────────────────────────────
+// Per-theme lighting configuration
+// ─────────────────────────────────────────────────────────────────────────────
+const THEME_LIGHTING = {
+  cork: {
+    ambient:   { intensity: 0.70, color: '#fff8f0' },
+    primary:   { intensity: 1.45, color: '#fff5e8', position: [6, 9, 7] },
+    fill1:     { intensity: 0.50, color: '#ffe0b2', position: [-7, 4, 5] },
+    fill2:     { intensity: 0.25, color: '#d4a96a', position: [4, -4, 4] },
+    env:       'apartment',
+    shadowOpacity: 0.35,
+  },
+  dark: {
+    ambient:   { intensity: 0.22, color: '#9090ff' },
+    primary:   { intensity: 0.80, color: '#c8c8ff', position: [4, 8, 6] },
+    fill1:     { intensity: 0.35, color: '#4040ff', position: [-6, 3, 5] },
+    fill2:     { intensity: 0.20, color: '#8080ff', position: [0, -5, 4] },
+    env:       'night',
+    shadowOpacity: 0.60,
+  },
+  blueprint: {
+    ambient:   { intensity: 0.40, color: '#b8d8ff' },
+    primary:   { intensity: 1.10, color: '#d0e8ff', position: [5, 8, 6] },
+    fill1:     { intensity: 0.45, color: '#4488bb', position: [-6, 3, 5] },
+    fill2:     { intensity: 0.20, color: '#2255aa', position: [3, -4, 4] },
+    env:       'city',
+    shadowOpacity: 0.45,
+  },
+  whiteboard: {
+    ambient:   { intensity: 0.90, color: '#ffffff' },
+    primary:   { intensity: 1.60, color: '#ffffff', position: [3, 10, 8] },
+    fill1:     { intensity: 0.60, color: '#f0f4ff', position: [-8, 4, 6] },
+    fill2:     { intensity: 0.30, color: '#e8f0ff', position: [5, -3, 5] },
+    env:       'studio',
+    shadowOpacity: 0.15,
+  },
+  midnight: {
+    ambient:   { intensity: 0.18, color: '#8888ff' },
+    primary:   { intensity: 0.70, color: '#aaaaff', position: [4, 8, 6] },
+    fill1:     { intensity: 0.40, color: '#4444cc', position: [-5, 3, 5] },
+    fill2:     { intensity: 0.22, color: '#6644ff', position: [2, -5, 4] },
+    env:       'night',
+    shadowOpacity: 0.70,
+  },
+  forest: {
+    ambient:   { intensity: 0.45, color: '#90c890' },
+    primary:   { intensity: 1.10, color: '#c8ffb8', position: [5, 9, 7] },
+    fill1:     { intensity: 0.50, color: '#228822', position: [-6, 3, 5] },
+    fill2:     { intensity: 0.28, color: '#44aa44', position: [3, -4, 4] },
+    env:       'forest',
+    shadowOpacity: 0.40,
+  },
+  slate: {
+    ambient:   { intensity: 0.38, color: '#aab8cc' },
+    primary:   { intensity: 1.00, color: '#ccd8e8', position: [5, 8, 7] },
+    fill1:     { intensity: 0.42, color: '#6688aa', position: [-6, 3, 5] },
+    fill2:     { intensity: 0.22, color: '#445566', position: [3, -4, 4] },
+    env:       'city',
+    shadowOpacity: 0.45,
+  },
+  paper: {
+    ambient:   { intensity: 0.85, color: '#fff8ec' },
+    primary:   { intensity: 1.50, color: '#fffaf0', position: [4, 10, 8] },
+    fill1:     { intensity: 0.55, color: '#f0e8d8', position: [-7, 4, 6] },
+    fill2:     { intensity: 0.25, color: '#e8dcc8', position: [4, -3, 5] },
+    env:       'apartment',
+    shadowOpacity: 0.18,
+  },
+  neon: {
+    ambient:   { intensity: 0.12, color: '#ff00ff' },
+    primary:   { intensity: 0.60, color: '#00ffff', position: [4, 7, 6] },
+    fill1:     { intensity: 0.50, color: '#ff00ff', position: [-6, 3, 5] },
+    fill2:     { intensity: 0.40, color: '#8800ff', position: [2, -5, 4] },
+    env:       'night',
+    shadowOpacity: 0.80,
+  },
 };
 
+// Fallback for unknown themes
+const DEFAULT_LIGHTING = THEME_LIGHTING.cork;
+
 export default function Scene() {
-  const boards       = useBoardStore((s) => s.boards);
+  const boards        = useBoardStore((s) => s.boards);
   const activeBoardId = useBoardStore((s) => s.activeBoardId);
-  const activeBoard  = boards.find((b) => b.id === activeBoardId) || boards[0];
-  const theme        = activeBoard?.theme || 'cork';
-  const bg           = THEME_BG[theme] || THEME_BG.cork;
+  const activeBoard   = boards.find((b) => b.id === activeBoardId) || boards[0];
+  const themeKey      = activeBoard?.theme || 'cork';
+
+  const theme   = THEMES[themeKey]         || THEMES.cork;
+  const light   = THEME_LIGHTING[themeKey] || DEFAULT_LIGHTING;
 
   return (
     <Canvas
       shadows
       camera={{ position: [0, 0, 12], fov: 50, near: 0.1, far: 200 }}
       gl={{ antialias: true, alpha: false }}
-      style={{ background: bg }}
+      style={{ background: theme.bgColor }}
     >
-      {/* Lights */}
-      <ambientLight intensity={theme === 'dark' ? 0.35 : 0.65} />
+      {/* ── Ambient ── */}
+      <ambientLight intensity={light.ambient.intensity} color={light.ambient.color} />
+
+      {/* ── Primary directional (key light + shadows) ── */}
       <directionalLight
-        position={[5, 8, 6]}
-        intensity={theme === 'dark' ? 0.9 : 1.4}
+        position={light.primary.position}
+        intensity={light.primary.intensity}
+        color={light.primary.color}
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-camera-near={0.1}
         shadow-camera-far={80}
-        shadow-camera-left={-20}
-        shadow-camera-right={20}
-        shadow-camera-top={12}
-        shadow-camera-bottom={-12}
+        shadow-camera-left={-22}
+        shadow-camera-right={22}
+        shadow-camera-top={14}
+        shadow-camera-bottom={-14}
       />
-      <pointLight position={[-6, 4, 5]} intensity={0.4} color="#ffe0b2" />
-      <pointLight position={[0, -5, 3]} intensity={0.2} color="#b3d9ff" />
 
+      {/* ── Fill lights ── */}
+      <pointLight position={light.fill1.position} intensity={light.fill1.intensity} color={light.fill1.color} />
+      <pointLight position={light.fill2.position} intensity={light.fill2.intensity} color={light.fill2.color} />
+
+      {/* ── Environment map for reflections ── */}
       <Suspense fallback={null}>
-        <Environment preset="apartment" />
+        <Environment preset={light.env} />
       </Suspense>
 
-      <ContactShadows position={[0, -6, 0]} opacity={0.3} scale={30} blur={2.5} far={8} />
+      {/* ── Contact shadows on board surface ── */}
+      <ContactShadows
+        position={[0, -7, 0]}
+        opacity={light.shadowOpacity}
+        scale={35}
+        blur={2.8}
+        far={10}
+      />
 
-      {/* Pan + zoom camera controller */}
+      {/* ── Camera controller ── */}
       <PanZoomCamera />
 
-      {/* Board + items */}
+      {/* ── Scene content ── */}
       <Suspense fallback={null}>
-        <CorkBoard theme={theme} />
+        <CorkBoard theme={themeKey} />
         <ConnectorLines />
       </Suspense>
     </Canvas>

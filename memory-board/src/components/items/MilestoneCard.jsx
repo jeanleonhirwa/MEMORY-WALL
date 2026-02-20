@@ -1,6 +1,7 @@
 import { Text, RoundedBox } from '@react-three/drei';
 import { useSpring, animated } from '@react-spring/three';
 import useItemDrag from '../../hooks/useItemDrag';
+import useBoardStore from '../../store/useBoardStore';
 import Pin from '../Pin';
 
 const STATUS_META = {
@@ -14,14 +15,20 @@ export default function MilestoneCard({ item }) {
   const { title = 'Milestone', targetDate = '', status = 'on-track', tasks = [], position, rotation, pinColor, width = 2.2, height = 1.8 } = item;
   const { hovered, isSelected, onPointerDown, onPointerEnter, onPointerLeave } = useItemDrag(item);
 
+  const boards        = useBoardStore((s) => s.boards);
+  const activeBoardId = useBoardStore((s) => s.activeBoardId);
+  const themeKey      = boards.find((b) => b.id === activeBoardId)?.theme || 'cork';
+  const isNeonTheme   = themeKey === 'neon';
+  const isLightTheme  = themeKey === 'whiteboard' || themeKey === 'paper';
+
   const { pos, rot, scale } = useSpring({
     pos: position, rot: rotation,
     scale: isSelected ? 1.05 : hovered ? 1.02 : 1,
     config: { tension: 200, friction: 22 },
   });
 
-  const meta = STATUS_META[status] || STATUS_META['on-track'];
-  const done = tasks.filter((t) => t.done).length;
+  const meta  = STATUS_META[status] || STATUS_META['on-track'];
+  const done  = tasks.filter((t) => t.done).length;
   const total = tasks.length;
 
   return (
@@ -31,6 +38,19 @@ export default function MilestoneCard({ item }) {
       onPointerEnter={onPointerEnter}
       onPointerLeave={onPointerLeave}
     >
+      {/* Drop shadow */}
+      <mesh position={[0.06, -0.07, -0.008]}>
+        <planeGeometry args={[width + 0.1, height + 0.1]} />
+        <meshStandardMaterial color="#000000" transparent opacity={isLightTheme ? 0.16 : 0.35} roughness={1} />
+      </mesh>
+
+      {/* Neon glow */}
+      {isNeonTheme && (
+        <RoundedBox args={[width + 0.05, height + 0.05, 0.04]} radius={0.05} smoothness={4} position={[0, 0, -0.003]}>
+          <meshStandardMaterial color={meta.color} transparent opacity={0.45} roughness={0.3} />
+        </RoundedBox>
+      )}
+
       {/* Card */}
       <RoundedBox args={[width, height, 0.05]} radius={0.04} smoothness={4} castShadow receiveShadow>
         <meshStandardMaterial color="#f0f9ff" roughness={0.85} metalness={0} />
