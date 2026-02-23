@@ -79,7 +79,8 @@ const THEME_LIST = [
   },
 ];
 
-export default function BoardSidebar({ onClose }) {
+export default function BoardSidebar({ open, onClose }) {
+  if (!open) return null;
   const boards        = useBoardStore((s) => s.boards);
   const activeBoardId = useBoardStore((s) => s.activeBoardId);
   const activeBoard   = boards.find((b) => b.id === activeBoardId) || boards[0];
