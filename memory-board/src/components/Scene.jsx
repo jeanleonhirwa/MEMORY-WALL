@@ -1,6 +1,6 @@
 import { Suspense, useRef, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
-import { Environment, ContactShadows } from '@react-three/drei';
+import { ContactShadows } from '@react-three/drei';
 import { Vector2 } from 'three';
 import CorkBoard from './CorkBoard';
 import ConnectorLines from './ConnectorLines';
@@ -186,11 +186,6 @@ export default function Scene() {
       {/* ── Fill lights ── */}
       <pointLight position={light.fill1.position} intensity={light.fill1.intensity} color={light.fill1.color} />
       <pointLight position={light.fill2.position} intensity={light.fill2.intensity} color={light.fill2.color} />
-
-      {/* ── Environment map for reflections ── */}
-      <Suspense fallback={null}>
-        <Environment preset={light.env} />
-      </Suspense>
 
       {/* ── Contact shadows on board surface ── */}
       <ContactShadows
