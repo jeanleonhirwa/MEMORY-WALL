@@ -9,27 +9,87 @@ import { THEMES } from './CorkBoard';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Pan + Zoom camera — no rotation, just pan & scroll-zoom
+//
+// Controls (non-conflicting with item drag):
+//   • Scroll wheel          → zoom toward mouse cursor
+//   • Space + drag          → pan (Figma/Miro style)
+//   • Middle-mouse drag     → pan
+//   • Right-click drag      → pan
 // ─────────────────────────────────────────────────────────────────────────────
+// Board half-extents in world units (items are clamped to ±14 x ±8)
+const BOARD_HALF_W = 14;
+const BOARD_HALF_H = 8;
+const Z_MIN = 4;
+const Z_MAX = 22;
+
+// How far the camera can pan at a given zoom level.
+// At Z_MIN (zoomed in close) → full board range.
+// At Z_MAX (zoomed all the way out) → 0 (perfectly centred).
+const panLimit = (z) => {
+  const t = (z - Z_MIN) / (Z_MAX - Z_MIN); // 0 at close, 1 at far
+  return {
+    x: BOARD_HALF_W * (1 - t),
+    y: BOARD_HALF_H * (1 - t),
+  };
+};
+
+const clampCamera = (cam) => {
+  const lim = panLimit(cam.position.z);
+  cam.position.x = Math.max(-lim.x, Math.min(lim.x, cam.position.x));
+  cam.position.y = Math.max(-lim.y, Math.min(lim.y, cam.position.y));
+};
+
 function PanZoomCamera() {
   const { camera, gl } = useThree();
-  const isPanning = useRef(false);
-  const lastMouse = useRef(new Vector2());
+  const isPanning  = useRef(false);
+  const spaceHeld  = useRef(false);
+  const lastMouse  = useRef(new Vector2());
 
   useEffect(() => {
     const canvas = gl.domElement;
 
+    // ── Zoom toward mouse cursor ──────────────────────────────────────────
     const onWheel = (e) => {
       e.preventDefault();
-      const zoomSpeed = 0.001;
-      camera.position.z = Math.max(4, Math.min(22, camera.position.z + e.deltaY * zoomSpeed * camera.position.z));
+
+      const rect = canvas.getBoundingClientRect();
+      const nx = ((e.clientX - rect.left) / rect.width)  *  2 - 1;
+      const ny = -((e.clientY - rect.top)  / rect.height) *  2 + 1;
+
+      const tanHalfFov = Math.tan((camera.fov * Math.PI) / 360);
+      const aspect = rect.width / rect.height;
+
+      // World position under the mouse BEFORE zoom
+      const beforeX = camera.position.x + nx * camera.position.z * tanHalfFov * aspect;
+      const beforeY = camera.position.y + ny * camera.position.z * tanHalfFov;
+
+      // Apply zoom
+      const zoomFactor = 1 + e.deltaY * 0.001;
+      const newZ = Math.max(Z_MIN, Math.min(Z_MAX, camera.position.z * zoomFactor));
+      camera.position.z = newZ;
+
+      // World position under the mouse AFTER zoom
+      const afterX = camera.position.x + nx * newZ * tanHalfFov * aspect;
+      const afterY = camera.position.y + ny * newZ * tanHalfFov;
+
+      // Shift camera so the point under cursor stays fixed, then clamp
+      camera.position.x += beforeX - afterX;
+      camera.position.y += beforeY - afterY;
+      clampCamera(camera);
     };
 
+    // ── Start pan: Space+LMB, middle-mouse, or right-click ───────────────
     const onMouseDown = (e) => {
-      if (e.button === 1 || e.button === 2 || e.altKey) {
+      const isSpacePan  = spaceHeld.current && e.button === 0;
+      const isMiddle    = e.button === 1;
+      const isRight     = e.button === 2;
+
+      if (isSpacePan || isMiddle || isRight) {
         isPanning.current = true;
         lastMouse.current.set(e.clientX, e.clientY);
         canvas.style.cursor = 'grabbing';
         e.preventDefault();
+        e.stopPropagation(); // prevent item-drag from firing when space is held
       }
     };
 
@@ -38,30 +98,60 @@ function PanZoomCamera() {
       const dx = e.clientX - lastMouse.current.x;
       const dy = e.clientY - lastMouse.current.y;
       lastMouse.current.set(e.clientX, e.clientY);
-      const panSpeed = camera.position.z * 0.0012;
-      camera.position.x -= dx * panSpeed;
-      camera.position.y += dy * panSpeed;
+
+      const rect = canvas.getBoundingClientRect();
+      const tanHalfFov = Math.tan((camera.fov * Math.PI) / 360);
+      const aspect = rect.width / rect.height;
+      // Scale pan to world units so it feels 1:1 with the cursor
+      const scaleX = (2 * camera.position.z * tanHalfFov * aspect) / rect.width;
+      const scaleY = (2 * camera.position.z * tanHalfFov) / rect.height;
+
+      camera.position.x -= dx * scaleX;
+      camera.position.y += dy * scaleY;
+      clampCamera(camera);
     };
 
     const onMouseUp = () => {
       isPanning.current = false;
-      canvas.style.cursor = 'auto';
+      canvas.style.cursor = spaceHeld.current ? 'grab' : 'auto';
+    };
+
+    // ── Space key: show grab cursor, block item-drag ──────────────────────
+    const onKeyDown = (e) => {
+      if (e.code === 'Space' && !e.repeat) {
+        const tag = document.activeElement?.tagName?.toLowerCase();
+        if (tag === 'input' || tag === 'textarea') return; // let inputs type spaces
+        spaceHeld.current = true;
+        canvas.style.cursor = 'grab';
+        e.preventDefault(); // prevent page scroll
+      }
+    };
+
+    const onKeyUp = (e) => {
+      if (e.code === 'Space') {
+        spaceHeld.current = false;
+        if (!isPanning.current) canvas.style.cursor = 'auto';
+      }
     };
 
     const onContextMenu = (e) => e.preventDefault();
 
-    canvas.addEventListener('wheel', onWheel, { passive: false });
-    canvas.addEventListener('mousedown', onMouseDown);
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
+    canvas.addEventListener('wheel',       onWheel,       { passive: false });
+    canvas.addEventListener('mousedown',   onMouseDown);
     canvas.addEventListener('contextmenu', onContextMenu);
+    window.addEventListener('mousemove',   onMouseMove);
+    window.addEventListener('mouseup',     onMouseUp);
+    window.addEventListener('keydown',     onKeyDown);
+    window.addEventListener('keyup',       onKeyUp);
 
     return () => {
-      canvas.removeEventListener('wheel', onWheel);
-      canvas.removeEventListener('mousedown', onMouseDown);
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
+      canvas.removeEventListener('wheel',       onWheel);
+      canvas.removeEventListener('mousedown',   onMouseDown);
       canvas.removeEventListener('contextmenu', onContextMenu);
+      window.removeEventListener('mousemove',   onMouseMove);
+      window.removeEventListener('mouseup',     onMouseUp);
+      window.removeEventListener('keydown',     onKeyDown);
+      window.removeEventListener('keyup',       onKeyUp);
     };
   }, [camera, gl]);
 

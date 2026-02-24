@@ -69,6 +69,7 @@ export default function App() {
             <span>N note</span><span>C code</span><span>T tasks</span>
             <span>D decision</span><span>M milestone</span><span>L link</span>
             <span>Ctrl+Z undo</span><span>Ctrl+F search</span>
+            <span>Space+drag pan</span><span>Scroll zoom</span>
           </div>
         </div>
       </header>
