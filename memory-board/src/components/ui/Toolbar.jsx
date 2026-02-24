@@ -8,6 +8,7 @@ const TOOLS = [
   { type: 'decision',  icon: '⚖️', label: 'Decision',  key: 'D', color: '#9b5de5' },
   { type: 'milestone', icon: '🚀', label: 'Milestone', key: 'M', color: '#00b4d8' },
   { type: 'link',      icon: '🔗', label: 'Link',      key: 'L', color: '#f72585' },
+  { type: 'list',      icon: '📋', label: 'List',      key: 'I', color: '#4a90d9' },
   { type: 'section',   icon: '🏷️', label: 'Section',   key: 'S', color: '#94a3b8' },
   { type: 'diagram',   icon: '🖼️', label: 'Diagram',   key: 'P', color: '#64748b' },
 ];
@@ -19,6 +20,7 @@ export default function Toolbar({ onSearch, onToggleSidebar, onExport }) {
   const addDecision  = useBoardStore((s) => s.addDecision);
   const addMilestone = useBoardStore((s) => s.addMilestone);
   const addLink      = useBoardStore((s) => s.addLink);
+  const addList      = useBoardStore((s) => s.addList);
   const addSection   = useBoardStore((s) => s.addSection);
   const addPhoto     = useBoardStore((s) => s.addPhoto);
   const clearBoard   = useBoardStore((s) => s.clearBoard);
@@ -40,6 +42,7 @@ export default function Toolbar({ onSearch, onToggleSidebar, onExport }) {
       case 'decision':  addDecision(); break;
       case 'milestone': addMilestone(); break;
       case 'link':      addLink(); break;
+      case 'list':      addList(); break;
       case 'section':   addSection(); break;
       case 'diagram':   fileInputRef.current?.click(); break;
     }

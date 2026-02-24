@@ -250,6 +250,50 @@ const useBoardStore = create(
         });
       },
 
+      addList: (title = 'My List', variant = 'bullet') => {
+        get()._addItem({
+          id: uuidv4(), type: 'list',
+          title, variant,
+          items: [
+            { id: uuidv4(), text: 'First item', done: false },
+            { id: uuidv4(), text: 'Second item', done: false },
+          ],
+          position: randomPos(), rotation: randomRot(0.08),
+          pinColor: '#4a90d9', width: 2.0,
+          tags: [],
+        });
+      },
+
+      addListItem: (cardId, text) => {
+        set((s) => ({
+          items: s.items.map((i) =>
+            i.id === cardId
+              ? { ...i, items: [...(i.items || []), { id: uuidv4(), text, done: false }] }
+              : i
+          ),
+        }));
+      },
+
+      toggleListItem: (cardId, itemId) => {
+        set((s) => ({
+          items: s.items.map((i) =>
+            i.id === cardId
+              ? { ...i, items: i.items.map((li) => (li.id === itemId ? { ...li, done: !li.done } : li)) }
+              : i
+          ),
+        }));
+      },
+
+      removeListItem: (cardId, itemId) => {
+        set((s) => ({
+          items: s.items.map((i) =>
+            i.id === cardId
+              ? { ...i, items: i.items.filter((li) => li.id !== itemId) }
+              : i
+          ),
+        }));
+      },
+
       addSection: (label = 'Section', color = '#ffffff') => {
         get()._addItem({
           id: uuidv4(), type: 'section',

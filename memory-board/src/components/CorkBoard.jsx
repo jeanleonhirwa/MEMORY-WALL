@@ -9,6 +9,7 @@ import MilestoneCard from './items/MilestoneCard';
 import LinkCard      from './items/LinkCard';
 import SectionLabel  from './items/SectionLabel';
 import DiagramCard   from './items/DiagramCard';
+import ListCard      from './items/ListCard';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THEME DEFINITIONS — each theme has:
@@ -450,6 +451,7 @@ function ItemRenderer({ item }) {
     case 'milestone': return <MilestoneCard item={item} />;
     case 'link':      return <LinkCard      item={item} />;
     case 'section':   return <SectionLabel  item={item} />;
+    case 'list':      return <ListCard       item={item} />;
     case 'photo':
     case 'diagram':   return <DiagramCard   item={item} />;
     default: return null;

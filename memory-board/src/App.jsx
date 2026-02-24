@@ -20,6 +20,7 @@ export default function App() {
   const addDecision  = useBoardStore((s) => s.addDecision);
   const addLink      = useBoardStore((s) => s.addLink);
   const addMilestone = useBoardStore((s) => s.addMilestone);
+  const addList      = useBoardStore((s) => s.addList);
   const addPhoto     = useBoardStore((s) => s.addPhoto);
   const boards        = useBoardStore((s) => s.boards);
   const activeBoardId = useBoardStore((s) => s.activeBoardId);
@@ -46,6 +47,7 @@ export default function App() {
     onAddDecision:  addDecision,
     onAddLink:      addLink,
     onAddMilestone: addMilestone,
+    onAddList:      addList,
     onAddPhoto:     handleAddPhoto,
     onSearch:       () => setSearchOpen(true),
   });
@@ -68,7 +70,7 @@ export default function App() {
           <div className="shortcut-hints">
             <span>N note</span><span>C code</span><span>T tasks</span>
             <span>D decision</span><span>M milestone</span><span>L link</span>
-            <span>Ctrl+Z undo</span><span>Ctrl+F search</span>
+            <span>I list</span><span>Ctrl+Z undo</span><span>Ctrl+F search</span>
             <span>Space+drag pan</span><span>Scroll zoom</span>
           </div>
         </div>

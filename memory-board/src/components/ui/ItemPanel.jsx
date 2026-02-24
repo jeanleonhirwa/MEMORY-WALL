@@ -18,10 +18,14 @@ export default function ItemPanel() {
   const addTaskItem    = useBoardStore((s) => s.addTaskItem);
   const toggleTaskItem = useBoardStore((s) => s.toggleTaskItem);
   const removeTaskItem = useBoardStore((s) => s.removeTaskItem);
+  const addListItem    = useBoardStore((s) => s.addListItem);
+  const toggleListItem = useBoardStore((s) => s.toggleListItem);
+  const removeListItem = useBoardStore((s) => s.removeListItem);
   const startConnector = useBoardStore((s) => s.startConnector);
 
   const item = items.find((i) => i.id === selectedId);
-  const [newTask, setNewTask] = useState('');
+  const [newTask, setNewTask]   = useState('');
+  const [newListItem, setNewListItem] = useState('');
 
   if (!item) return null;
 
@@ -30,7 +34,8 @@ export default function ItemPanel() {
   const typeLabel = {
     note: '📝 Note', code: '💻 Code', task: '✅ Tasks',
     decision: '⚖️ Decision', milestone: '🚀 Milestone',
-    link: '🔗 Link', section: '🏷️ Section', photo: '🖼️ Diagram', diagram: '🖼️ Diagram',
+    link: '🔗 Link', list: '📋 List', section: '🏷️ Section',
+    photo: '🖼️ Diagram', diagram: '🖼️ Diagram',
   }[item.type] || '📌 Item';
 
   return (
@@ -177,6 +182,69 @@ export default function ItemPanel() {
             {item.url && (
               <a className="open-link-btn" href={item.url} target="_blank" rel="noopener noreferrer">🔗 Open Link</a>
             )}
+          </>
+        )}
+
+        {/* ── List Card ── */}
+        {item.type === 'list' && (
+          <>
+            <label className="panel-label">Title</label>
+            <input className="panel-input" value={item.title || ''} onChange={(e) => upd({ title: e.target.value })} />
+
+            <label className="panel-label">Style</label>
+            <div className="status-grid">
+              {[
+                { key: 'bullet',    icon: '•',  label: 'Bullet'    },
+                { key: 'numbered',  icon: '1.', label: 'Numbered'  },
+                { key: 'checklist', icon: '✅', label: 'Checklist' },
+                { key: 'starred',   icon: '★',  label: 'Starred'   },
+              ].map(({ key, icon, label }) => (
+                <button
+                  key={key}
+                  className={`status-btn ${item.variant === key ? 'active' : ''}`}
+                  onClick={() => upd({ variant: key })}
+                  title={label}
+                >
+                  {icon} {label}
+                </button>
+              ))}
+            </div>
+
+            <label className="panel-label">Items</label>
+            <div className="task-list">
+              {(item.items || []).map((li) => (
+                <div key={li.id} className="task-row">
+                  {item.variant === 'checklist' && (
+                    <input type="checkbox" checked={!!li.done} onChange={() => toggleListItem(item.id, li.id)} />
+                  )}
+                  <span className={li.done && item.variant === 'checklist' ? 'task-done' : ''}>{li.text}</span>
+                  <button className="task-remove" onClick={() => removeListItem(item.id, li.id)}>✕</button>
+                </div>
+              ))}
+            </div>
+            <div className="task-add-row">
+              <input
+                className="panel-input"
+                value={newListItem}
+                onChange={(e) => setNewListItem(e.target.value)}
+                placeholder="Add item..."
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && newListItem.trim()) {
+                    addListItem(item.id, newListItem.trim());
+                    setNewListItem('');
+                  }
+                }}
+              />
+              <button
+                className="task-add-btn"
+                onClick={() => {
+                  if (newListItem.trim()) {
+                    addListItem(item.id, newListItem.trim());
+                    setNewListItem('');
+                  }
+                }}
+              >+</button>
+            </div>
           </>
         )}
 

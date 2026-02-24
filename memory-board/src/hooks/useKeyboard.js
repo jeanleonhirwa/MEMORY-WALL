@@ -4,7 +4,7 @@ import useBoardStore from '../store/useBoardStore';
 /**
  * Global keyboard shortcut handler for DevBoard.
  */
-export default function useKeyboard({ onAddNote, onAddCode, onAddTask, onAddDecision, onAddLink, onAddMilestone, onAddPhoto, onSearch, onFitAll }) {
+export default function useKeyboard({ onAddNote, onAddCode, onAddTask, onAddDecision, onAddLink, onAddMilestone, onAddPhoto, onAddList, onSearch, onFitAll }) {
   const selectedId = useBoardStore((s) => s.selectedId);
   const removeItem = useBoardStore((s) => s.removeItem);
   const deselect   = useBoardStore((s) => s.deselect);
@@ -47,6 +47,7 @@ export default function useKeyboard({ onAddNote, onAddCode, onAddTask, onAddDeci
         case 'd': onAddDecision?.(); break;
         case 'l': onAddLink?.(); break;
         case 'm': onAddMilestone?.(); break;
+        case 'i': onAddList?.(); break;
         case 'p': onAddPhoto?.(); break;
         case 'f': onFitAll?.(); break;
         case 'escape':
@@ -62,5 +63,5 @@ export default function useKeyboard({ onAddNote, onAddCode, onAddTask, onAddDeci
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedId, removeItem, deselect, undo, redo, onAddNote, onAddCode, onAddTask, onAddDecision, onAddLink, onAddMilestone, onAddPhoto, onSearch, onFitAll]);
+  }, [selectedId, removeItem, deselect, undo, redo, onAddNote, onAddCode, onAddTask, onAddDecision, onAddLink, onAddMilestone, onAddPhoto, onAddList, onSearch, onFitAll]);
 }
