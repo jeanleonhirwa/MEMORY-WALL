@@ -5,11 +5,13 @@ import useBoardStore from '../store/useBoardStore';
  * Global keyboard shortcut handler for DevBoard.
  */
 export default function useKeyboard({ onAddNote, onAddCode, onAddTask, onAddDecision, onAddLink, onAddMilestone, onAddPhoto, onAddList, onSearch, onFitAll }) {
-  const selectedId = useBoardStore((s) => s.selectedId);
-  const removeItem = useBoardStore((s) => s.removeItem);
-  const deselect   = useBoardStore((s) => s.deselect);
-  const undo       = useBoardStore((s) => s.undo);
-  const redo       = useBoardStore((s) => s.redo);
+  const selectedId          = useBoardStore((s) => s.selectedId);
+  const selectedConnectorId = useBoardStore((s) => s.selectedConnectorId);
+  const removeItem          = useBoardStore((s) => s.removeItem);
+  const removeConnector     = useBoardStore((s) => s.removeConnector);
+  const deselect            = useBoardStore((s) => s.deselect);
+  const undo                = useBoardStore((s) => s.undo);
+  const redo                = useBoardStore((s) => s.redo);
 
   useEffect(() => {
     const handler = (e) => {
@@ -55,7 +57,8 @@ export default function useKeyboard({ onAddNote, onAddCode, onAddTask, onAddDeci
           break;
         case 'delete':
         case 'backspace':
-          if (selectedId) removeItem(selectedId);
+          if (selectedConnectorId) removeConnector(selectedConnectorId);
+          else if (selectedId) removeItem(selectedId);
           break;
         default: break;
       }
@@ -63,5 +66,5 @@ export default function useKeyboard({ onAddNote, onAddCode, onAddTask, onAddDeci
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedId, removeItem, deselect, undo, redo, onAddNote, onAddCode, onAddTask, onAddDecision, onAddLink, onAddMilestone, onAddPhoto, onAddList, onSearch, onFitAll]);
+  }, [selectedId, selectedConnectorId, removeItem, removeConnector, deselect, undo, redo, onAddNote, onAddCode, onAddTask, onAddDecision, onAddLink, onAddMilestone, onAddPhoto, onAddList, onSearch, onFitAll]);
 }

@@ -65,7 +65,7 @@ export default function App() {
         </div>
         <div className="app-header-right">
           {connectorMode && (
-            <div className="connector-mode-badge">🔀 Click another item to connect</div>
+            <div className="connector-mode-badge">🪢 Ctrl+click another item to connect — Esc to cancel</div>
           )}
           <div className="shortcut-hints">
             <span>N note</span><span>C code</span><span>T tasks</span>

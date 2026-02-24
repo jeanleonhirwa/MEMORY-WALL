@@ -68,6 +68,7 @@ const useBoardStore = create(
       // ── Items ────────────────────────────────────────────────────────────────
       items: [],
       selectedId: null,
+      selectedConnectorId: null,
       connectorMode: false,   // when true, next click selects connector target
       connectorSourceId: null,
 
@@ -125,8 +126,9 @@ const useBoardStore = create(
       updateItemPosition: (id, position) =>
         set((s) => ({ items: s.items.map((i) => (i.id === id ? { ...i, position } : i)) })),
 
-      selectItem: (id) => set({ selectedId: id }),
-      deselect: () => set({ selectedId: null, connectorMode: false, connectorSourceId: null }),
+      selectItem: (id) => set({ selectedId: id, selectedConnectorId: null }),
+      selectConnector: (id) => set({ selectedConnectorId: id, selectedId: null }),
+      deselect: () => set({ selectedId: null, selectedConnectorId: null, connectorMode: false, connectorSourceId: null }),
 
       removeItem: (id) => {
         get()._saveHistory();
@@ -134,6 +136,7 @@ const useBoardStore = create(
           items: s.items.filter((i) => i.id !== id),
           connectors: s.connectors.filter((c) => c.fromId !== id && c.toId !== id),
           selectedId: s.selectedId === id ? null : s.selectedId,
+          selectedConnectorId: null,
         }));
       },
 

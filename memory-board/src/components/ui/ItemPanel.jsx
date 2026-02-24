@@ -9,23 +9,79 @@ const STATUSES_MILESTONE = ['on-track', 'at-risk', 'delayed', 'done'];
 const LANGUAGES = ['javascript', 'typescript', 'python', 'go', 'rust', 'sql', 'bash', 'json', 'yaml', 'css', 'html'];
 
 export default function ItemPanel() {
-  const selectedId     = useBoardStore((s) => s.selectedId);
-  const items          = useBoardStore((s) => s.items);
-  const updateItem     = useBoardStore((s) => s.updateItem);
-  const removeItem     = useBoardStore((s) => s.removeItem);
-  const duplicateItem  = useBoardStore((s) => s.duplicateItem);
-  const deselect       = useBoardStore((s) => s.deselect);
-  const addTaskItem    = useBoardStore((s) => s.addTaskItem);
-  const toggleTaskItem = useBoardStore((s) => s.toggleTaskItem);
-  const removeTaskItem = useBoardStore((s) => s.removeTaskItem);
-  const addListItem    = useBoardStore((s) => s.addListItem);
-  const toggleListItem = useBoardStore((s) => s.toggleListItem);
-  const removeListItem = useBoardStore((s) => s.removeListItem);
-  const startConnector = useBoardStore((s) => s.startConnector);
+  const selectedId          = useBoardStore((s) => s.selectedId);
+  const selectedConnectorId = useBoardStore((s) => s.selectedConnectorId);
+  const items               = useBoardStore((s) => s.items);
+  const connectors          = useBoardStore((s) => s.connectors);
+  const updateItem          = useBoardStore((s) => s.updateItem);
+  const removeItem          = useBoardStore((s) => s.removeItem);
+  const duplicateItem       = useBoardStore((s) => s.duplicateItem);
+  const deselect            = useBoardStore((s) => s.deselect);
+  const addTaskItem         = useBoardStore((s) => s.addTaskItem);
+  const toggleTaskItem      = useBoardStore((s) => s.toggleTaskItem);
+  const removeTaskItem      = useBoardStore((s) => s.removeTaskItem);
+  const addListItem         = useBoardStore((s) => s.addListItem);
+  const toggleListItem      = useBoardStore((s) => s.toggleListItem);
+  const removeListItem      = useBoardStore((s) => s.removeListItem);
+  const startConnector      = useBoardStore((s) => s.startConnector);
+  const removeConnector     = useBoardStore((s) => s.removeConnector);
+  const updateConnector     = useBoardStore((s) => s.updateConnector);
 
   const item = items.find((i) => i.id === selectedId);
+  const connector = connectors.find((c) => c.id === selectedConnectorId);
   const [newTask, setNewTask]   = useState('');
   const [newListItem, setNewListItem] = useState('');
+
+  // ── Connector panel ──────────────────────────────────────────────────────
+  if (connector) {
+    const fromItem = items.find((i) => i.id === connector.fromId);
+    const toItem   = items.find((i) => i.id === connector.toId);
+    const ROPE_COLORS = ['#e8c97a','#f4a261','#90e0ef','#f48fb1','#a8dadc','#b5ead7','#ff9aa2','#c3b1e1'];
+    return (
+      <div className="item-panel">
+        <div className="panel-header">
+          <span className="panel-type-label">🪢 Rope Link</span>
+          <div className="panel-header-actions">
+            <button className="close-btn" onClick={deselect}>✕</button>
+          </div>
+        </div>
+        <div className="panel-body">
+          <div className="connector-info">
+            <span className="connector-node">📌 {fromItem?.title || fromItem?.text?.slice(0,20) || fromItem?.type || '?'}</span>
+            <span className="connector-arrow">⟶</span>
+            <span className="connector-node">📌 {toItem?.title || toItem?.text?.slice(0,20) || toItem?.type || '?'}</span>
+          </div>
+
+          <label className="panel-label">Label</label>
+          <input
+            className="panel-input"
+            value={connector.label || ''}
+            onChange={(e) => updateConnector(connector.id, { label: e.target.value })}
+            placeholder="Optional label..."
+          />
+
+          <label className="panel-label">Rope Color</label>
+          <div className="color-grid">
+            {ROPE_COLORS.map((c) => (
+              <button
+                key={c}
+                className={`color-swatch ${connector.color === c ? 'active' : ''}`}
+                style={{ background: c }}
+                onClick={() => updateConnector(connector.id, { color: c })}
+              />
+            ))}
+          </div>
+
+          <button
+            className="delete-btn"
+            onClick={() => { removeConnector(connector.id); deselect(); }}
+          >
+            🗑 Remove Rope
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!item) return null;
 

@@ -38,11 +38,23 @@ export default function useItemDrag(item) {
     [camera, gl]
   );
 
+  const startConnector  = useBoardStore((s) => s.startConnector);
+
   const onPointerDown = useCallback(
     (e) => {
       e.stopPropagation();
 
-      // Connector mode: clicking an item finishes the connection
+      // Ctrl+click → start or finish a rope connection
+      if (e.ctrlKey || e.metaKey) {
+        if (connectorMode) {
+          finishConnector(id);
+        } else {
+          startConnector(id);
+        }
+        return;
+      }
+
+      // Connector mode active but no ctrl — clicking an item finishes the connection
       if (connectorMode) {
         finishConnector(id);
         return;
@@ -76,12 +88,12 @@ export default function useItemDrag(item) {
       window.addEventListener('pointermove', onMove);
       window.addEventListener('pointerup', onUp);
     },
-    [id, position, selectItem, bringToFront, updateItemPosition, screenToBoard, gl, connectorMode, finishConnector, hovered]
+    [id, position, selectItem, bringToFront, updateItemPosition, screenToBoard, gl, connectorMode, finishConnector, startConnector, hovered]
   );
 
   const onPointerEnter = useCallback(() => {
     setHovered(true);
-    gl.domElement.style.cursor = connectorMode ? 'crosshair' : 'grab';
+    gl.domElement.style.cursor = connectorMode ? 'cell' : 'grab';
   }, [gl, connectorMode]);
 
   const onPointerLeave = useCallback(() => {
